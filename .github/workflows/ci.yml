@@ -12,6 +12,11 @@ on:
 permissions:
   contents: read
 
+# Opt into Node.js 24 for JavaScript actions. The default flips on
+# 2026-06-16; setting this now keeps logs clean of deprecation warnings.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -96,11 +101,12 @@ jobs:
       - name: Verify ACK pattern in controlplane log
         run: |
           set -e
-          docker compose logs controlplane > /tmp/cp.log
-          # We expect exactly four ACKs (LDS / RDS / CDS / EDS) for snapshot v1.
+          # Strip ANSI escapes defensively even though NO_COLOR=1 is set.
+          docker compose logs --no-log-prefix controlplane \
+            | sed 's/\x1b\[[0-9;]*[mGKHF]//g' > /tmp/cp.log
           missing=0
           for ty in LDS RDS CDS EDS; do
-            if ! grep -q "kind=\"ACK \" ty=\"$ty\".*version=v1" /tmp/cp.log; then
+            if ! grep -E "ACK.*ty=\"?$ty\"?" /tmp/cp.log | grep -q "version=v1"; then
               echo "MISSING ACK for $ty"
               missing=1
             fi

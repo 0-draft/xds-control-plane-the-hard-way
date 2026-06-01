@@ -10,6 +10,7 @@ services:
     environment:
       RUST_LOG: info
       UPSTREAM_PORT: "9000"
+      NO_COLOR: "1"
 
   controlplane:
     build:
@@ -23,6 +24,10 @@ services:
       - upstream
     environment:
       RUST_LOG: info
+      # Disable ANSI escapes in tracing output. Container stdout is not a
+      # TTY but tracing-subscriber defaults to emit ANSI anyway, which
+      # turns log lines into a grep-hostile mess.
+      NO_COLOR: "1"
 
   envoy:
     image: envoyproxy/envoy:v1.32-latest
