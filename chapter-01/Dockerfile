@@ -8,7 +8,7 @@
 # `failed to unpack package ... File exists (os error 17)`). Sharing one
 # build stage sidesteps the race entirely.
 
-FROM rust:1.86-slim AS build
+FROM rust:1.96-slim AS build
 WORKDIR /src
 RUN apt-get update && apt-get install -y --no-install-recommends \
         pkg-config libssl-dev \
