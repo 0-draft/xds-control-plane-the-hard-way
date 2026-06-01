@@ -68,7 +68,7 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Cache docker layers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /tmp/.buildx-cache
           key: buildx-${{ runner.os }}-${{ hashFiles('chapter-01/**/Cargo.toml', 'chapter-01/**/Cargo.lock', 'chapter-01/Dockerfile') }}
