@@ -2,7 +2,8 @@ services:
   upstream:
     build:
       context: .
-      dockerfile: upstream/Dockerfile
+      dockerfile: Dockerfile
+      target: upstream
     container_name: hardway-upstream
     expose:
       - "9000"
@@ -13,7 +14,8 @@ services:
   controlplane:
     build:
       context: .
-      dockerfile: controlplane/Dockerfile
+      dockerfile: Dockerfile
+      target: controlplane
     container_name: hardway-controlplane
     expose:
       - "18000"

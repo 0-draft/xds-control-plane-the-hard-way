@@ -9,6 +9,13 @@ on:
     # before a reader finds out the hard way.
     - cron: "0 3 * * 1"
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   cargo:
     name: cargo check / fmt / clippy
@@ -17,19 +24,30 @@ jobs:
       run:
         working-directory: chapter-01
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+
       - name: Install Rust toolchain
-        run: |
-          rustup toolchain install 1.86.0 --profile minimal --component clippy --component rustfmt
-          rustup default 1.86.0
-      - name: Install protoc
-        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.86.0"
+          components: clippy, rustfmt
+
+      - name: Cache cargo registry and target
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: chapter-01
+
       - name: cargo fmt
         run: cargo fmt --all --check
+
       - name: cargo check
         run: cargo check --workspace --all-targets
+
       - name: cargo clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: cargo test
+        run: cargo test --workspace --all-targets
 
   smoke:
     name: docker-compose smoke
@@ -39,26 +57,65 @@ jobs:
       run:
         working-directory: chapter-01
     steps:
-      - uses: actions/checkout@v4
-      - name: Build & start stack
-        run: docker compose up -d --build
-      - name: Wait + curl
+      - uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: buildx-${{ runner.os }}-${{ hashFiles('chapter-01/**/Cargo.toml', 'chapter-01/**/Cargo.lock', 'chapter-01/Dockerfile') }}
+          restore-keys: |
+            buildx-${{ runner.os }}-
+
+      - name: Build images
+        env:
+          DOCKER_BUILDKIT: "1"
+          COMPOSE_DOCKER_CLI_BUILD: "1"
+        run: docker compose build --pull
+
+      - name: Start stack
+        run: docker compose up -d
+
+      - name: Wait for Envoy to converge
         run: |
           set -e
           for i in $(seq 1 60); do
             if curl -sf -o /dev/null http://localhost:10000/; then
-              echo "Envoy is serving traffic"
+              echo "Envoy is serving traffic after ${i}s"
               curl -sS http://localhost:10000/
               exit 0
             fi
             sleep 1
           done
           echo "Envoy did not converge in time"
-          docker compose logs controlplane envoy
           exit 1
-      - name: Dump controlplane logs (always)
-        if: always()
-        run: docker compose logs --tail=200 controlplane envoy
+
+      - name: Verify ACK pattern in controlplane log
+        run: |
+          set -e
+          docker compose logs controlplane > /tmp/cp.log
+          # We expect exactly four ACKs (LDS / RDS / CDS / EDS) for snapshot v1.
+          missing=0
+          for ty in LDS RDS CDS EDS; do
+            if ! grep -q "kind=\"ACK \" ty=\"$ty\".*version=v1" /tmp/cp.log; then
+              echo "MISSING ACK for $ty"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "--- controlplane log ---"
+            cat /tmp/cp.log
+            exit 1
+          fi
+          echo "All four ACKs (LDS/RDS/CDS/EDS) observed at v1"
+
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose logs --tail=300 controlplane envoy upstream
+
       - name: Tear down
         if: always()
         run: docker compose down -v
