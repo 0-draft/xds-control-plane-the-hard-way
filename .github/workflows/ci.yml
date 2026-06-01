@@ -1,0 +1,64 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Drift detection. If upstream Envoy or xds-api break us, this fires
+    # before a reader finds out the hard way.
+    - cron: "0 3 * * 1"
+
+jobs:
+  cargo:
+    name: cargo check / fmt / clippy
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: chapter-01
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        run: |
+          rustup toolchain install 1.86.0 --profile minimal --component clippy --component rustfmt
+          rustup default 1.86.0
+      - name: Install protoc
+        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
+      - name: cargo fmt
+        run: cargo fmt --all --check
+      - name: cargo check
+        run: cargo check --workspace --all-targets
+      - name: cargo clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+  smoke:
+    name: docker-compose smoke
+    runs-on: ubuntu-24.04
+    needs: cargo
+    defaults:
+      run:
+        working-directory: chapter-01
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build & start stack
+        run: docker compose up -d --build
+      - name: Wait + curl
+        run: |
+          set -e
+          for i in $(seq 1 60); do
+            if curl -sf -o /dev/null http://localhost:10000/; then
+              echo "Envoy is serving traffic"
+              curl -sS http://localhost:10000/
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Envoy did not converge in time"
+          docker compose logs controlplane envoy
+          exit 1
+      - name: Dump controlplane logs (always)
+        if: always()
+        run: docker compose logs --tail=200 controlplane envoy
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
