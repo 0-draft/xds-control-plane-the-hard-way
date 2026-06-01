@@ -112,7 +112,7 @@ by hand.
 | `tokio`                  | `1.41`          |
 | `hyper`                  | `1.5`           |
 | Envoy image              | `v1.32-latest`  |
-| Rust toolchain (build)   | `1.86-slim`     |
+| Rust toolchain (build)   | `1.96-slim`     |
 
 ## References
 
