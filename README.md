@@ -49,12 +49,23 @@ make down
 ## Maintenance
 
 `cncf/xds`, `envoyproxy/envoy`, `xds-api`, `tonic`, `prost` all move
-independently. To keep chapters compiling, this repo ships with a
-project-local Claude skill at `.claude/skills/refresh-hardway/`.
+independently. To keep chapters compiling, this repo has three layers of
+drift defense:
 
-Run it periodically (or wire it into a scheduled agent) to bump pins, run
-`cargo build`, run the smoke test per chapter, and surface a diff. See
-[`.claude/skills/refresh-hardway/SKILL.md`](./.claude/skills/refresh-hardway/SKILL.md).
+1. **GitHub Actions cron** (`ci.yml`, weekly) reruns the smoke test
+   against the pinned versions. If upstream stays still, this stays green.
+2. **Dependabot** (`.github/dependabot.yml`, weekly) opens PRs for
+   non-breaking bumps automatically. `tonic` / `prost` / `xds-api` are
+   intentionally excluded because they have to bump in lockstep, and
+   Dependabot would propose unbuildable PRs.
+3. **`refresh-hardway` Claude skill** (`.claude/skills/refresh-hardway/`)
+   is the manual escape valve when Dependabot's PR can't apply cleanly,
+   or when we want to consume a major bump on purpose. It bumps the
+   lockstepped trio, runs the full per-chapter validation, and surfaces
+   any breakage.
+
+See [`.claude/skills/refresh-hardway/SKILL.md`](./.claude/skills/refresh-hardway/SKILL.md)
+for the manual procedure.
 
 ## License
 

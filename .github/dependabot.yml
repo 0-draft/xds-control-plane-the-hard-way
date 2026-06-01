@@ -1,0 +1,70 @@
+version: 2
+
+# Dependabot is the automated complement to the `refresh-hardway` skill.
+# - Dependabot opens PRs when an upstream bumps, weekly.
+# - The skill is the manual escape valve when a PR doesn't apply cleanly,
+#   or when we want to consume a major bump on purpose.
+#
+# Neither auto-merges. Human review is the bar for this repo because
+# proto / API drift in `xds-api`, `tonic`, or Envoy can quietly break
+# semantics without breaking compilation.
+
+updates:
+  # Rust workspace.
+  - package-ecosystem: "cargo"
+    directory: "/chapter-01"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 10
+    labels:
+      - "deps"
+      - "rust"
+    groups:
+      # Bundle non-breaking bumps to keep PR noise low. Majors break out
+      # individually so they get scrutiny.
+      cargo-minor:
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # `tonic` and `prost` have to bump together with `xds-api`. Letting
+      # Dependabot bump them out of lockstep produces unbuildable PRs.
+      # We bump them via the refresh-hardway skill when xds-api releases.
+      - dependency-name: "tonic"
+      - dependency-name: "prost"
+      - dependency-name: "prost-types"
+      - dependency-name: "xds-api"
+
+  # Docker base images in the chapter Dockerfile.
+  - package-ecosystem: "docker"
+    directory: "/chapter-01"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 4
+    labels:
+      - "deps"
+      - "docker"
+
+  # GitHub Actions in workflows.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 4
+    labels:
+      - "deps"
+      - "ci"
+    groups:
+      actions-minor:
+        update-types:
+          - "minor"
+          - "patch"
