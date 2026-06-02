@@ -34,8 +34,8 @@ Each chapter is a complete stack. Start it with `make up` and tear it down with
 1. [Hello, xDS](chapter-01/). The smallest stack that earns the name: one
    listener, route, cluster, and endpoint served over ADS. Curl the upstream
    and watch the four ACKs go by.
-2. Snapshot swaps and rollback. Push a broken listener, watch the version roll
-   back on NACK. (planned)
+2. [Snapshot swaps and rollback](chapter-02/). Push a broken listener, watch
+   the version roll back on NACK.
 3. Static SDS to start mTLS. Inject a cert over SDS and watch it hot-rotate.
    (planned)
 4. Delta xDS. The same stack on the Delta protocol. (planned)
