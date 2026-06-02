@@ -1,0 +1,45 @@
+services:
+  upstream:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: upstream
+    container_name: hardway-upstream
+    expose:
+      - "9000"
+    environment:
+      RUST_LOG: info
+      UPSTREAM_PORT: "9000"
+      NO_COLOR: "1"
+
+  controlplane:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: controlplane
+    container_name: hardway-controlplane
+    expose:
+      - "18000"
+    # Admin API for pushing snapshot versions (good / broken / status).
+    ports:
+      - "19000:19000"
+    depends_on:
+      - upstream
+    environment:
+      RUST_LOG: info
+      # Disable ANSI escapes in tracing output. Container stdout is not a
+      # TTY but tracing-subscriber defaults to emit ANSI anyway, which
+      # turns log lines into a grep-hostile mess.
+      NO_COLOR: "1"
+
+  envoy:
+    image: envoyproxy/envoy:v1.32-latest
+    container_name: hardway-envoy
+    command: ["-c", "/etc/envoy/envoy.yaml", "-l", "info"]
+    volumes:
+      - ./envoy/bootstrap.yaml:/etc/envoy/envoy.yaml:ro
+    ports:
+      - "10000:10000"
+      - "9901:9901"
+    depends_on:
+      - controlplane

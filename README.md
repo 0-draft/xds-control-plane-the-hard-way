@@ -36,8 +36,8 @@ Each chapter is a complete stack. Start it with `make up` and tear it down with
    and watch the four ACKs go by.
 2. [Snapshot swaps and rollback](chapter-02/). Push a broken listener, watch
    the version roll back on NACK.
-3. Static SDS to start mTLS. Inject a cert over SDS and watch it hot-rotate.
-   (planned)
+3. [Static SDS to start mTLS](chapter-03/). Inject a cert over SDS and watch it
+   hot-rotate.
 4. Delta xDS. The same stack on the Delta protocol. (planned)
 5. `xdstp://` and multiple authorities. A federated bootstrap and a second
    control plane. (planned)
