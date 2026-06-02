@@ -1,5 +1,11 @@
 .DS_Store
 *.log
+
+# Claude Code working files (local guidance, not part of the lab)
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+
 target/
 Cargo.lock
 !chapter-*/Cargo.lock
