@@ -1,5 +1,7 @@
 # Chapter 1: Hello, xDS
 
+*English | [日本語](./README.ja.md)*
+
 The smallest possible thing that earns the name "xDS control plane".
 
 ## What you'll build
@@ -100,9 +102,8 @@ So you have a reason to read Chapter 2+:
 
 ## Pinned versions
 
-These are deliberate pins. Bump them by running the
-[`refresh-hardway`](../.claude/skills/refresh-hardway/SKILL.md) skill, not
-by hand.
+These are deliberate pins. `tonic`, `prost`, and `xds-api` move in lockstep,
+so bump those three together and rebuild rather than one at a time.
 
 | Dependency               | Pin             |
 | ------------------------ | --------------- |
