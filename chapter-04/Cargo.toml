@@ -1,0 +1,24 @@
+[workspace]
+resolver = "2"
+members = ["controlplane", "upstream"]
+
+[workspace.package]
+edition = "2021"
+license = "MIT"
+publish = false
+
+[workspace.dependencies]
+tokio = { version = "1.41", features = ["rt-multi-thread", "macros", "signal", "net", "sync", "time"] }
+tonic = "0.12"
+prost = "0.13"
+prost-types = "0.13"
+xds-api = "0.2"
+hyper = { version = "1.5", features = ["server", "http1"] }
+hyper-util = { version = "0.1", features = ["server", "tokio", "http1"] }
+http-body-util = "0.1"
+bytes = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+anyhow = "1"
+tokio-stream = { version = "0.1", features = ["sync"] }
+async-stream = "0.3"

@@ -38,7 +38,7 @@ Each chapter is a complete stack. Start it with `make up` and tear it down with
    the version roll back on NACK.
 3. [Static SDS to start mTLS](chapter-03/). Inject a cert over SDS and watch it
    hot-rotate.
-4. Delta xDS. The same stack on the Delta protocol. (planned)
+4. [Delta xDS](chapter-04/). The same stack on the Delta protocol.
 5. `xdstp://` and multiple authorities. A federated bootstrap and a second
    control plane. (planned)
 6. ORCA out-of-band load reports. A backend reports synthetic load and the
