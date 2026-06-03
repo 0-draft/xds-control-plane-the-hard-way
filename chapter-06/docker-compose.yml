@@ -1,0 +1,59 @@
+services:
+  upstream-a:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: upstream
+    container_name: hardway-upstream-a
+    hostname: upstream-a
+    expose:
+      - "9000"
+    environment:
+      RUST_LOG: info
+      UPSTREAM_PORT: "9000"
+      # Busy backend: reports high utilization, so it should get less traffic.
+      ORCA_UTILIZATION: "0.9"
+      NO_COLOR: "1"
+
+  upstream-b:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: upstream
+    container_name: hardway-upstream-b
+    hostname: upstream-b
+    expose:
+      - "9000"
+    environment:
+      RUST_LOG: info
+      UPSTREAM_PORT: "9000"
+      # Idle backend: reports low utilization, so it should get more traffic.
+      ORCA_UTILIZATION: "0.1"
+      NO_COLOR: "1"
+
+  controlplane:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: controlplane
+    container_name: hardway-controlplane
+    expose:
+      - "18000"
+    depends_on:
+      - upstream-a
+      - upstream-b
+    environment:
+      RUST_LOG: info
+      NO_COLOR: "1"
+
+  envoy:
+    image: envoyproxy/envoy:v1.32-latest
+    container_name: hardway-envoy
+    command: ["-c", "/etc/envoy/envoy.yaml", "-l", "info"]
+    volumes:
+      - ./envoy/bootstrap.yaml:/etc/envoy/envoy.yaml:ro
+    ports:
+      - "10000:10000"
+      - "9901:9901"
+    depends_on:
+      - controlplane

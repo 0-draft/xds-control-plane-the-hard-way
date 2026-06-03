@@ -42,8 +42,9 @@ Each chapter is a complete stack. Start it with `make up` and tear it down with
 5. [`xdstp://` and multiple authorities](chapter-05/). xdstp:// naming and glob
    collections across two authorities on one Delta stream (Envoy does not yet
    support per-authority control planes).
-6. ORCA out-of-band load reports. A backend reports synthetic load and the
-   balancer picks the lighter pod. (planned)
+6. [ORCA out-of-band load reports](chapter-06/). Backends report synthetic load
+   over ORCA; the control plane (Envoy doesn't consume ORCA itself) turns it
+   into EDS weights and the lighter backend wins.
 
 ## License
 

@@ -1,0 +1,24 @@
+// Minimal hand-authored subset of xds.service.orca.v3.OpenRcaService.
+//
+// The service and method names must match the upstream proto exactly, because
+// Envoy's out-of-band ORCA client calls `/xds.service.orca.v3.OpenRcaService/
+// StreamCoreMetrics` by name. The backend streams an OrcaLoadReport every
+// `report_interval`.
+syntax = "proto3";
+
+package xds.service.orca.v3;
+
+import "xds/data/orca/v3/orca_load_report.proto";
+
+// We omit the real `report_interval` (google.protobuf.Duration) field to keep
+// the vendored protos free of well-known-type imports; the backend just reports
+// on a fixed interval. Envoy still sends report_interval, but proto3 ignores the
+// unknown field.
+message OrcaLoadReportRequest {
+  repeated string request_cost_names = 2;
+}
+
+service OpenRcaService {
+  rpc StreamCoreMetrics(OrcaLoadReportRequest)
+      returns (stream xds.data.orca.v3.OrcaLoadReport);
+}

@@ -1,0 +1,20 @@
+// Minimal hand-authored subset of xds.data.orca.v3.OrcaLoadReport.
+//
+// We only declare the fields we set, but the field numbers match the real
+// upstream proto, so the bytes are wire-compatible with Envoy's parser. The
+// client-side weighted round robin LB reads `application_utilization` (falling
+// back to `cpu_utilization`) to compute endpoint weights.
+syntax = "proto3";
+
+package xds.data.orca.v3;
+
+message OrcaLoadReport {
+  double cpu_utilization = 1;
+  double mem_utilization = 2;
+  map<string, double> request_cost = 4;
+  map<string, double> utilization = 5;
+  double rps_fractional = 6;
+  double eps = 7;
+  map<string, double> named_metrics = 8;
+  double application_utilization = 9;
+}
